@@ -1,0 +1,126 @@
+<!-- {% extends 'core/base.html' %}
+{% block title %}Vendor Payments{% endblock %}
+{% block content %}
+{% load static %}
+
+<h2 class="mb-4">Vendor Payments</h2>
+
+<!-- Add Payment Button -->
+<button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+    <i class="bi bi-plus-lg"></i> Add Payment
+</button>
+
+<!-- Payments Table -->
+<table class="table table-hover table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Vendor</th>
+            <th>Purchase (Optional)</th>
+            <th>Amount</th>
+            <th>Vendor Balance</th>
+            <!-- <th>Payment Type</th> -->
+            <th>Date</th>
+            <!-- <th>Recorded By</th> -->
+            <!-- <th>Screenshot</th> -->
+            <!-- <th>Notes</th> -->
+            <th>Actions</th>
+            
+
+        </tr>
+    </thead>
+    <tbody>
+        {% for payment in payments %}
+        <tr>
+            <td>{{ payment.vendor.name }}</td>
+            <td>{% if payment.purchase %}{{ payment.purchase.product.name }}{% else %}-{% endif %}</td>
+            <td>{{ payment.amount }}</td>
+            <td>{{ payment.vendor.pending_total }}</td>
+            <!-- <td>{{ payment.get_payment_type_display }}</td> -->
+            <td>{{ payment.date }}</td>
+            <!-- <td>{{ payment.recorded_by.username }}</td> -->
+            <!-- <td>
+                {% if payment.screenshot %}
+                    <a href="{{ payment.screenshot.url }}" target="_blank">View</a>
+                {% else %}
+                    -
+                {% endif %}
+            </td> -->
+            <!-- <td>{{ payment.notes|default:"-" }}</td> -->
+            <td>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editPaymentModal{{ payment.id }}">
+                    <i class="bi bi-pencil-square"></i> Edit
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Add Payment Modal -->
+<div class="modal fade" id="addPaymentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Add Payment</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            {{ form.vendor.label_tag }} {{ form.vendor }}
+          </div>
+          <div class="mb-3">
+            {{ form.purchase.label_tag }} {{ form.purchase }}
+            <small class="text-muted">Optional: Link to a purchase</small>
+          </div>
+          <div class="mb-3">
+            {{ form.amount.label_tag }} {{ form.amount }}
+          </div>
+          <div class="mb-3">
+            {{ form.payment_type.label_tag }} {{ form.payment_type }}
+          </div>
+          <div class="mb-3">
+            {{ form.date.label_tag }} {{ form.date }}
+          </div>
+          <div class="mb-3">
+            {{ form.screenshot.label_tag }} {{ form.screenshot }}
+          </div>
+          <div class="mb-3">
+            {{ form.notes.label_tag }} {{ form.notes }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" name="add_payment" class="btn btn-success">Save</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Payment Modals -->
+{% for payment, edit_form in edit_forms_list %}
+<div class="modal fade" id="editPaymentModal{{ payment.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" enctype="multipart/form-data" action="{% url 'edit_payment' payment.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Payment</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          {{ edit_form.as_p }}
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %} -->

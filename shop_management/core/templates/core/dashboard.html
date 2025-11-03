@@ -1,0 +1,293 @@
+{% extends 'core/base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+/* Base Layout */
+body {
+    background-color: #f8fafc;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    color: #1e293b;
+}
+
+h2, h4, h5, h6 {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #7710eb;;
+    border: none;
+}
+.btn-primary:hover { background-color: #6366f1; }
+.btn-secondary {
+    background-color: #94a3b8;
+    border: none;
+}
+.btn-secondary:hover { background-color: #64748b; }
+
+/* --- Summary Cards --- */
+.summary-card {
+    border-radius: 14px;
+    padding: 1rem;
+    text-align: center;
+    color: #fff;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    min-height: 120px; /* ensures content fits */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.summary-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.summary-card h6 { font-size: 0.9rem; opacity: 0.9; margin-bottom: 6px; }
+.summary-card h3 { font-size: 1.6rem; font-weight: 700; margin: 0; }
+
+/* Card Gradient Themes */
+.bg-blue { background: linear-gradient(135deg,#3b82f6,#1d4ed8); }
+.bg-red { background: linear-gradient(135deg,#ef4444,#b91c1c); }
+.bg-green { background: linear-gradient(135deg,#10b981,#047857); }
+.bg-yellow { background: linear-gradient(135deg,#f59e0b,#b45309); }
+.bg-indigo { background: linear-gradient(135deg,#6366f1,#3730a3); }
+.bg-purple { background: linear-gradient(135deg,#8b5cf6,#6d28d9); }
+
+/* --- Dashboard Cards --- */
+.dashboard-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.dashboard-card h5 { font-size: 1.05rem; margin-bottom: 1rem; color: #0f172a; }
+
+.dashboard-card:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+
+/* Scrollable tables */
+.scrollable-table {
+    overflow-y: auto;
+}
+.scrollable-table table { width: 100%; border-collapse: collapse; }
+.scrollable-table table thead th {
+    background-color: #1e293b;
+    color: #fff;
+    padding: 10px;
+}
+.scrollable-table table tbody td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+.scrollable-table table tbody tr:hover { background-color: #f9fafb; }
+
+/* Charts auto resize */
+canvas {
+    width: 100% !important;
+    height: auto !important;
+    flex-grow: 1; /* stretch inside flex container */
+}
+</style>
+
+
+<div class="dashboard-container container-fluid py-4">
+
+  <h2 class="mb-4">📊 Shop Analytics Dashboard</h2>
+
+  <!-- Filter Form -->
+  <form method="get" class="row g-2 mb-4">
+    <div class="col-md-3"><input type="date" name="start_date" class="form-control" value="{{ start_date }}"></div>
+    <div class="col-md-3"><input type="date" name="end_date" class="form-control" value="{{ end_date }}"></div>
+    <div class="col-md-2"><button class="btn btn-primary w-100">Filter</button></div>
+    <div class="col-md-2"><a href="{% url 'dashboard' %}" class="btn btn-primary w-100">Reset</a></div>
+  </form>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-md-2 col-sm-6">
+    <div class="summary-card bg-indigo">
+      <h6>Total Sales</h6>
+      <h3>₹{{ total_sales|floatformat:2 }}</h3>
+    </div>
+  </div>
+  <div class="col-md-2 col-sm-6">
+    <div class="summary-card bg-indigo">
+      <h6>Total Purchases</h6>
+      <h3>₹{{ total_purchase|floatformat:2 }}</h3>
+    </div>
+  </div>
+  <div class="col-md-2 col-sm-6">
+    <div class="summary-card bg-indigo">
+      <h6>Profit</h6>
+      <h3>₹{{ profit|floatformat:2 }}</h3>
+    </div>
+  </div>
+  <div class="col-md-2 col-sm-6">
+    <div class="summary-card bg-indigo">
+      <h6>Low Stock</h6>
+      <h3>{{ low_stock.count }}</h3>
+    </div>
+  </div>
+  <div class="col-md-2 col-sm-6">
+    <div class="summary-card bg-indigo">
+      <h6>Today Sales</h6>
+      <h3>{{ today_sales_count }}</h3>
+    </div>
+  </div>
+  <div class="col-md-2 col-sm-6">
+    <div class="summary-card bg-indigo   ">
+      <h6>Yesterday Sales</h6>
+      <h3>{{ yesterday_sales_count }}</h3>
+    </div>
+  </div>
+</div>
+
+
+
+
+  <!-- Charts Row -->
+  <div class="row g-3 mb-5">
+
+    <!-- Sales & Profit Chart -->
+    <div class="col-lg-6 col-md-12">
+      <div class="dashboard-card p-3" style="height: 300px;">
+        <h5 class="mb-3">📅 Sales & Profit (Last 7 Days)</h5>
+        <canvas id="salesChart" style="height:220px;"></canvas>
+      </div>
+    </div>
+
+    <!-- Top Selling Products Chart -->
+    <div class="col-lg-6 col-md-12">
+      <div class="dashboard-card p-3 " style="height: 300px;">
+        <h5 class="mb-3 ">🏆 Top Selling Products</h5>
+        <canvas id="topSellingChart" style="height:220px;"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Tables Row -->
+  <div class="row g-3 mb-5">
+
+    <!-- Low Stock Products Table -->
+    <div class="col-lg-6 col-md-12">
+      <div class="dashboard-card p-3 scrollable-table" style="height: 300px;">
+        <h5 class="mb-3">⚠️ Low Stock Products</h5>
+        <table class="table table-hover table-borderless mb-0">
+          <thead class="table-dark">
+            <tr><th>Product</th><th></th><th>Stock</th><th></th><th>Price</th><th></th><th>Sub Category</th></tr>
+          </thead>
+          <tbody>
+            {% for p in low_stock %}
+              <tr><td>{{ p.name }}</td><td></td><td>{{ p.stock }}</td><td></td><td>{{p.purchase_price}}</td><td></td><td>{{p.subcategory}}</td></tr>
+            {% empty %}
+              <tr><td colspan="7">All good!</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Vendor Pending Amounts Table -->
+    <div class="col-lg-6 col-md-12">
+      <div class="dashboard-card p-3 scrollable-table" style="height: 300px;">
+        <h5 class="mb-3">💳 Vendor Pending Amounts</h5>
+        <table class="table table-hover table-borderless mb-0">
+          <thead class="table-dark">
+            <tr><th>Vendor</th><th></th><th>Pending (₹)</th><th></th><th>Phone</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for vendor in vendors %}
+              <tr><td>{{ vendor.name }}</td><td></td><td>₹{{ vendor.pending_total|floatformat:2 }}</td><td></td><td>{{vendor.phone}}</td><td></td></tr>
+            {% empty %}
+              <tr><td colspan="6">No pending payments!</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Django JSON Script for Charts -->
+  {{ chart_labels|json_script:"chartLabels" }}
+  {{ sales_values|json_script:"salesValues" }}
+  {{ profit_values|json_script:"profitValues" }}
+  {{ top_selling_labels|json_script:"topLabels" }}
+  {{ top_selling_values|json_script:"topValues" }}
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Parse data from Django
+    const chartLabels = JSON.parse(document.getElementById('chartLabels').textContent);
+    const salesValues = JSON.parse(document.getElementById('salesValues').textContent);
+    const profitValues = JSON.parse(document.getElementById('profitValues').textContent);
+    const topLabels = JSON.parse(document.getElementById('topLabels').textContent);
+    const topValues = JSON.parse(document.getElementById('topValues').textContent);
+
+    // Sales & Profit Line Chart
+    new Chart(document.getElementById('salesChart'), {
+      type: 'line',
+      data: {
+        labels: chartLabels,
+        datasets: [
+          {
+            label: 'Sales (₹)',
+            data: salesValues,
+            borderColor: '#2575fc',
+            backgroundColor: 'rgba(37,117,252,0.2)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Profit (₹)',
+            data: profitValues,
+            borderColor: '#38ef7d',
+            backgroundColor: 'rgba(56,239,125,0.2)',
+            tension: 0.4,
+            fill: true
+          }
+        ]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    // Top Selling Products Bar Chart
+    new Chart(document.getElementById('topSellingChart'), {
+      type: 'bar',
+      data: {
+        labels: topLabels,
+        datasets: [{
+          label: 'Units Sold',
+          data: topValues,
+          backgroundColor: 'rgba(169, 19, 208, 1)'
+        }]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    // Optional: Top Profit Doughnut Chart
+    // new Chart(document.getElementById('topProfitChart'), {
+    //   type: 'doughnut',
+    //   data: {
+    //     labels: {{ top_profit_labels|safe }},
+    //     datasets: [{
+    //       data: {{ top_profit_values|safe }},
+    //       backgroundColor: ['#00c6ff','#38ef7d','#ffd200','#ff0844','#b621fe']
+    //     }]
+    //   },
+    //   options: { responsive: true }
+    // });
+  </script>
+
+</div>
+{% endblock %}

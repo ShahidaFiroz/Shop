@@ -1,0 +1,149 @@
+{% extends 'core/base.html' %}
+{% block title %}Purchases{% endblock %}
+{% block content %}
+{% load static %}
+{% load custom_tags %}
+
+<h2 class="mb-4">Purchases</h2>
+
+<!-- Filter Purchases by Vendor/Product -->
+<form method="GET" class="mb-3 d-flex gap-2">
+    <select name="vendor" class="form-select" onchange="this.form.submit()">
+        <option value="">All Vendors</option>
+        {% for vendor in vendors %}
+        <option value="{{ vendor.id }}" {% if selected_vendor == vendor.id|stringformat:"s" %}selected{% endif %}>
+            {{ vendor.name }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <select name="product" class="form-select" onchange="this.form.submit()">
+        <option value="">All Products</option>
+        {% for product in products %}
+        <option value="{{ product.id }}" {% if selected_product == product.id|stringformat:"s" %}selected{% endif %}>
+            {{ product.name }}
+        </option>
+        {% endfor %}
+    </select>
+</form>
+
+<!-- Add Purchase Button -->
+<button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addPurchaseModal">
+    <i class="bi bi-plus-lg"></i> Add Purchase
+</button>
+
+
+<!-- Purchases Table -->
+<table class="table table-hover table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Vendor</th>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Total</th>
+            <th>Amount Paid</th>
+            <th>Pending Amount</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for purchase in purchases %}
+        <tr>
+            <td>{{ purchase.vendor.name }}</td>
+            <td>{{ purchase.product.name }}</td>
+            <td>{{ purchase.quantity }}</td>
+            <td>{{ purchase.price }}</td>
+            <td>{{ purchase.total_price }}</td>
+            <td>{{purchase.amount_paid}}</td>
+           <td>{{ purchase.pending_amount }}</td>
+ 
+            <td>{{ purchase.date }}</td>
+            <td>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ purchase.id }}">
+                     <i class="bi bi-pencil-square"></i> Edit
+                </button>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deletePurchaseModal{{ purchase.id }}">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Add Purchase Modal -->
+<div class="modal fade" id="addPurchaseModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Add Purchase</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            {{ form.as_p }}
+        </div>
+        <div class="modal-footer">
+          <button type="submit" name="add_purchase" class="btn btn-success">Save</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Purchase Modals -->
+ <!-- Edit Purchase Modals -->
+{% for purchase, edit_form in edit_forms_list %}
+<div class="modal fade" id="editModal{{ purchase.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{% url 'edit_purchase' purchase.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Purchase</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          {{ edit_form.as_p }}
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+
+
+<!-- Delete Purchase Modals -->
+{% for purchase in purchases %}
+<div class="modal fade" id="deletePurchaseModal{{ purchase.id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{% url 'delete_purchase' purchase.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Delete Purchase</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete this purchase of <strong>{{ purchase.product.name }}</strong> from <strong>{{ purchase.vendor.name }}</strong>?
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-danger">Yes, Delete</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}

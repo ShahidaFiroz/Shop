@@ -1,0 +1,63 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- Form for adding or editing -->
+    <h3>{% if editing %}Edit Vendor{% else %}Add Vendor{% endif %}</h3>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">
+            {% if editing %}Save Changes{% else %}Add Vendor{% endif %}
+        </button>
+        {% if editing %}
+            <a href="{% url 'vendors' %}" class="btn btn-secondary">Cancel</a>
+        {% endif %}
+    </form>
+
+    <hr>
+
+    <!-- List of vendors -->
+    <h3>All Vendors</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Contact</th>
+                <th>Balance</th>
+                <th>Opening Balance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vendor in vendors %}
+            <tr>
+                <td>{{ vendor.name }}</td>
+                <td>{{ vendor.phone }}</td>
+                <td>
+    ₹{{ vendor.balance }}
+    {% if vendor.balance > 0 %}
+        <span class="text-danger">(Pending)</span>
+    {% else %}
+        <span class="text-success">(Settled)</span>
+    {% endif %}
+</td>
+<td>{{vendor.opening_balance}}</td>
+                <td>
+                    <a href="{% url 'vendors_edit' vendor.id %}" class="btn btn-sm btn-warning">Edit</a>
+                    <form action="{% url 'vendors_delete' vendor.id %}" method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No vendors found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

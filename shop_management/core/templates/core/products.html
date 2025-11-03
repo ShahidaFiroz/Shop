@@ -1,0 +1,180 @@
+{% extends 'core/base.html' %}
+{% block title %}Products{% endblock %}
+{% block content %}
+{% load static %}
+{% load custom_tags %}
+
+<h2 class="mb-4">Products</h2>
+
+<!-- Filter Products by Category/Subcategory -->
+<form method="GET" class="mb-3 d-flex gap-2">
+    <select name="category" id="categoryFilter" class="form-select" onchange="this.form.submit()">
+        <option value="">All Categories</option>
+        {% for category in categories %}
+        <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+            {{ category.name }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <select name="subcategory" id="subcategoryFilter" class="form-select" onchange="this.form.submit()">
+        <option value="">All Subcategories</option>
+        {% for subcat in subcategories %}
+        <option value="{{ subcat.id }}" {% if selected_subcategory == subcat.id|stringformat:"s" %}selected{% endif %}>
+            {{ subcat.name }}
+        </option>
+        {% endfor %}
+    </select>
+    <a class="btn btn-info btn-sm" href="{% url 'product_list' %}">Detailed View</a>
+
+</form>
+
+<!-- Add Product Button -->
+<button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
+    <i class="bi bi-plus-lg"></i> Add Product
+</button>
+
+<!-- Products Table -->
+<table class="table table-hover table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Subcategory</th>
+            <th>Stock</th>
+            <th>Purchase Price</th>
+            <th>Sale Price</th>
+            <th>Actions</th>
+        </tr>      
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr>
+            <td>
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" width="50" height="50" class="rounded">
+                {% else %}
+                    No Image
+                {% endif %}
+            </td>
+            <td>{{ product.name }}</td>
+            <td>{{ product.subcategory.category.name }}</td>
+            <td>{{ product.subcategory.name }}</td>
+            <td>{{ product.stock }}</td>
+            <td>${{ product.purchase_price }}</td>
+            <td>${{ product.sale_price }}</td>
+            <td>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editProductModal{{ product.id }}">
+                    <i class="bi bi-pencil-square"></i> Edit
+                </button>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteProductModal{{ product.id }}">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Add Product</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            {{ form.as_p }}
+            <div class="text-center mt-3">
+                <img id="imagePreview" src="#" alt="Image Preview" style="display:none; width:100px; height:100px; object-fit:cover; border-radius:8px; border:1px solid #ccc;">
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" name="add_product" class="btn btn-success">Save</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Product Modals -->
+{% for product in products %}
+<div class="modal fade" id="editProductModal{{ product.id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" enctype="multipart/form-data" action="{% url 'edit_product' product.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Product</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            {% with edit_forms|dict_get:product.id as edit_form %}
+                {{ edit_form.as_p }}
+            {% endwith %}
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% for product in products %}
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteProductModal{{ product.id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{% url 'delete_product' product.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Delete Product</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete <strong>{{ product.name }}</strong>?
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-danger">Yes, Delete</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+
+<!-- Live Preview Script for Add Product -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const imageInput = document.querySelector("#id_image");
+    const preview = document.querySelector("#imagePreview");
+
+    if (imageInput) {
+        imageInput.addEventListener("change", function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.style.display = "block";
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = "none";
+                preview.src = "#";
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}

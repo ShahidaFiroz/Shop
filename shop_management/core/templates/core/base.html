@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Shop Manager{% endblock %}</title>
+
+  <!-- Google Fonts & Bootstrap -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f0f2f5;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      height: 100vh;
+      width: 250px;
+      position: fixed;
+      left: 0;
+      top: 0;
+       background:linear-gradient(-90deg, #0089D0 0%, #A125C2 100%);
+      color: white;
+      padding-top: 30px;
+      box-shadow: 2px 0 10px rgba(49, 48, 48, 0.3);
+    }
+
+    .sidebar h4 {
+      text-align: center;
+      color: #f7f2f2;
+      font-weight: 600;
+      margin-bottom: 30px;
+    }
+
+    .sidebar a {
+      color: #ffffff;
+      text-decoration: none;
+      display: block;
+      padding: 12px 20px;
+      transition: 0.3s;
+      font-weight: 500;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background: rgba(223, 168, 168, 0.1);
+      color: #fff;
+      border-left: 3px solid #00c6ff;
+    }
+
+    .content {
+      margin-left: 270px;
+      padding: 30px;
+      min-height: 100vh;
+    }
+
+    /* Cards */
+    .card-custom {
+      border: none;
+      border-radius: 15px;
+      color: #fff;
+      transition: transform 0.2s;
+    }
+
+    .card-custom:hover {
+      transform: translateY(-5px);
+      box-shadow: 0px 10px 20px rgba(0,0,0,0.15);
+    }
+
+    .card-bg-sales {
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+    }
+
+    .card-bg-purchase {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+    }
+
+    .card-bg-profit {
+      background: linear-gradient(135deg, #38ef7d, #11998e);
+    }
+
+    .card-bg-loss {
+      background: linear-gradient(135deg, #ff0844, #ffb199);
+    }
+
+    /* Tables */
+    .table-custom {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    th {
+      background-color: #7f16e1 !important;
+      color: white;
+    }
+
+    .auth-links {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9rem;
+    }
+
+    .auth-links a {
+      color: #00c6ff;
+      text-decoration: none;
+    }
+
+    .auth-links a:hover {
+      text-decoration: underline;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="sidebar">
+    <h4>🛒 My Shop</h4>
+
+    {% if user.is_authenticated %}
+      <div class="auth-links">
+        <a href="{% url 'logout' %}">Logout ({{ user.username }})</a>
+      </div>
+    {% else %}
+      <div class="auth-links">
+        <a href="{% url 'login' %}">Login</a>
+      </div>
+    {% endif %}
+
+    <a href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+    <a href="{% url 'products' %}"><i class="bi bi-box-seam me-2"></i>Products</a>
+    <a href="{% url 'vendors' %}"><i class="bi bi-people-fill me-2"></i>Vendors</a>
+    <a href="{% url 'purchases' %}"><i class="bi bi-bag-check me-2"></i>Purchases</a>
+    <a href="{% url 'sales' %}"><i class="bi bi-cash-stack me-2"></i>Sales</a>
+    <a href="{% url 'payments' %}"><i class="bi bi-credit-card me-2"></i>Payments</a>
+    <a href="{% url 'product_list' %}"><i class="bi bi-grid-3x3-gap me-2"></i>Product Cards</a>
+
+  </div>
+
+  <div class="content">
+    {% block content %}
+    {% endblock %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+{% extends 'core/base.html' %}
+{% block title %}Sales{% endblock %}
+{% block content %}
+{% load static %}
+
+<h2 class="mb-4">Sales</h2>
+
+<!-- Add Sale Button -->
+<button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addSaleModal">
+    <i class="bi bi-plus-lg"></i> Add Sale
+</button>
+
+<!-- Sales Table -->
+<table class="table table-hover table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Total</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sale in sales %}
+        <tr>
+            <td>{{ sale.product.name }}</td>
+            <td>{{ sale.quantity }}</td>
+            <td>${{ sale.price }}</td>
+            <td>${{ sale.total_price }}</td>
+            <td>{{ sale.date }}</td>
+            <td>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ sale.id }}">
+                    <i class="bi bi-pencil-square"></i> Edit
+                </button>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ sale.id }}">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Add Sale Modal -->
+<div class="modal fade" id="addSaleModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Add Sale</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            {{ form.product.label_tag }} {{ form.product }}
+            <small id="referencePrice" class="text-muted">Default Price: $0.00</small>
+          </div>
+
+          <div class="mb-3">
+            {{ form.quantity.label_tag }} {{ form.quantity }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.price.label_tag }} {{ form.price }}
+            <small class="text-muted">Enter the actual selling price</small>
+          </div>
+
+          <div class="mb-3">
+            <label>Total:</label>
+            <input type="text" id="totalPrice" class="form-control" readonly>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" name="add_sale" class="btn btn-success">Save</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Sale Modals -->
+{% for sale, edit_form in edit_forms_list %}
+<div class="modal fade" id="editModal{{ sale.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{% url 'edit_sale' sale.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Sale</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          {{ edit_form.as_p }}
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Delete Sale Modals -->
+{% for sale in sales %}
+<div class="modal fade" id="deleteModal{{ sale.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{% url 'delete_sale' sale.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Delete Sale</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete this sale of <strong>{{ sale.product.name }}</strong>?
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-danger">Yes, Delete</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const productSelect = document.getElementById('id_product');
+    const quantityInput = document.getElementById('id_quantity');
+    const priceInput = document.getElementById('id_price');
+    const totalInput = document.getElementById('totalPrice');
+    const referencePriceText = document.getElementById('referencePrice');
+
+    const productPrices = {
+        {% for product in products %}
+            "{{ product.id }}": {{ product.sale_price|floatformat:"2" }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    function updateReferencePrice() {
+        const selectedId = productSelect.value;
+        if (productPrices[selectedId] !== undefined) {
+            referencePriceText.textContent = "Default Price: $" + productPrices[selectedId];
+            priceInput.value = productPrices[selectedId]; // prefill actual price
+        } else {
+            referencePriceText.textContent = "Default Price: $0.00";
+            priceInput.value = 0;
+        }
+        updateTotal();
+    }
+
+    function updateTotal() {
+        const qty = parseFloat(quantityInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        totalInput.value = (qty * price).toFixed(2);
+    }
+
+    productSelect.addEventListener('change', updateReferencePrice);
+    quantityInput.addEventListener('input', updateTotal);
+    priceInput.addEventListener('input', updateTotal);
+
+    updateReferencePrice();
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'core/base.html' %}
+{% block title %}Products{% endblock %}
+{% block content %}
+{% load static %}
+{% load custom_tags %}
+<style>
+/* Page Styles */
+body { background-color: #f8fafc; font-family: 'Inter', sans-serif; color: #1e293b; }
+
+/* Filter Form */
+.filter-form { margin-bottom: 2rem; }
+.filter-form select, .filter-form input { width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1; }
+.filter-form button { margin-top: 0.5rem; }
+
+/* Product Grid */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+    gap: 1.5rem;
+}
+
+/* Product Card */
+.product-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.25s ease;
+}
+.product-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.1); }
+
+.product-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-bottom: 0.8rem;
+}
+
+.product-card h6 { font-weight: 600; margin-bottom: 0.5rem; font-size: 1rem; }
+.product-card p { margin: 0.2rem 0; font-size: 0.9rem; }
+.product-card .price { font-weight: 700; color: #1d4ed8; font-size: 1.1rem; }
+
+.add-to-cart {
+    margin-top: auto;
+    text-align: center;
+}
+.add-to-cart button {
+    background-color: #6366f1;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.add-to-cart button:hover { background-color: #4f46e5; }
+
+</style>
+
+<div class="container py-4">
+
+    <h2 class="mb-4">🛒 Products</h2>
+
+    <!-- Filter Form -->
+    <form method="get" class="row g-2 filter-form">
+        <div class="col-md-3">
+            <select name="category" class="form-select">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if cat.id|stringformat:"s" == request.GET.category %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="subcategory" class="form-select">
+                <option value="">All Subcategories</option>
+                {% for sub in subcategories %}
+                    <option value="{{ sub.id }}" {% if sub.id|stringformat:"s" == request.GET.subcategory %}selected{% endif %}>{{ sub.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <input type="text" name="search" class="form-control" placeholder="Search products..." value="{{ request.GET.search }}">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100">Filter</button>
+        </div>
+    </form>
+
+    <!-- Product Cards Grid -->
+    <div class="products-grid">
+        {% for product in products %}
+        <div class="product-card">
+           {% if product.image %}
+           <img src="{{ product.image.url }}" alt="{{ product.name }}">
+           {% else %}
+           <img src="{% static 'images/no-image.png' %}" alt="No image">
+           {% endif %}
+            <h6>{{ product.name }}</h6>
+            <p>Category: {{ product.category.name }}</p>
+            <p>Subcategory: {{ product.subcategory.name }}</p>
+            <p>Stock: {{ product.stock }}</p>
+            <p class="price">₹{{ product.sale_price|floatformat:2 }}</p>
+            
+        </div>
+        {% empty %}
+            <p>No products found!</p>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}
